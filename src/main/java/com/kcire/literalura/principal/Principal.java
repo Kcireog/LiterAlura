@@ -6,19 +6,28 @@ import com.kcire.literalura.service.ConsumoAPI;
 import com.kcire.literalura.service.ConvierteDatos;
 import com.kcire.literalura.service.LibroService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+
 
 public class Principal {
 
 
     private Scanner leer = new Scanner(System.in);
-    private LibroService libroService = new LibroService();
-    private AutorService autorService = new AutorService();
     private static final String URL_BASE = "https://gutendex.com/books/";
     private ConsumoAPI consumoApi = new ConsumoAPI();
     private ConvierteDatos conversor = new ConvierteDatos();
+
+    private static LibroService libroService;
+    private static AutorService autorService;
+
+    public Principal(LibroService libroService, AutorService autorService) {
+        Principal.libroService = libroService;
+        Principal.autorService = autorService;
+    }
 
     public void menu() {
         var opcion = -1;
@@ -44,12 +53,16 @@ public class Principal {
                     obtenerLibroPorTitulo();
                     break;
                 case 2:
+                    listarLibrosRegistrados();
                     break;
                 case 3:
+                    listarAutoresRegistrados();
                     break;
                 case 4:
+                    listarAutoresVivos();
                     break;
                 case 5:
+                    listarLibrosPorIdioma();
                     break;
                 case 0:
                     System.out.println("Cerrando la aplicación...");
@@ -62,7 +75,8 @@ public class Principal {
 
     }
 
-    public void obtenerLibroPorTitulo() {
+
+    private void obtenerLibroPorTitulo() {
         System.out.println("Titulo del libro a buscar: ");
         var nombreLibro = leer.nextLine();
 
@@ -124,4 +138,59 @@ public class Principal {
         autorService.guardarAutor(autor);
         return autor;
     }
+
+    //listar los libros registrador en la bd
+    public void listarLibrosRegistrados() {
+        List<Libro> libros = libroService.obtenerLibros();
+        libros.forEach(System.out::println);
+    }
+
+    //listar los autores registrador en la bd
+    private void listarAutoresRegistrados() {
+        List<Autor> autores = autorService.obtenerAutores();
+        autores.forEach(System.out::println);
+    }
+
+    //listar los autores vivos en un determinado año
+    private void listarAutoresVivos() {
+        System.out.println("Ingrese el año para listar los autores que esten vivos:");
+        var anio = leer.nextInt();
+        leer.nextLine();
+
+        List<Autor> autoresVivos = autorService.obtenerAutoresVivosEnDeterminadoAnio(anio);
+        autoresVivos.forEach(System.out::println);
+    }
+
+    //listar los libros por idioma
+    private void listarLibrosPorIdioma() {
+        System.out.println("""
+                    ***Idiomas***
+                1- Español
+                2- Ingles
+                3- Portugues
+                
+                -------------------
+                Selecciona una opción:
+                """);
+        var opc = leer.nextInt();
+        leer.nextLine();
+        String idioma = "";
+
+        switch (opc) {
+            case 1:
+                idioma = "es";
+                break;
+            case 2:
+                idioma = "en";
+                break;
+            case 3:
+                idioma = "pt";
+                break;
+            default:
+                System.out.println("Opción invalida...");
+        }
+        List<Libro> librosIdioma = libroService.obtenerLibrosPorIdioma(idioma);
+        librosIdioma.forEach(System.out::println);
+    }
+
 }

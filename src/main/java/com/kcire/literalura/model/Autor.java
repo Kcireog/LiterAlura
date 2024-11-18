@@ -2,6 +2,7 @@ package com.kcire.literalura.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,8 +16,9 @@ public class Autor {
     private int fechaNacimiento;
     private int fechaFallecimiento;
 
-    @ManyToMany(mappedBy = "autores") // Indica que esta es la relación inversa
-    private List<Libro> libros;
+    @ManyToMany(mappedBy = "autores", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    // Indica que esta es la relación inversa
+    private List<Libro> libros = new ArrayList<>();
 
     public Autor() {
     }
@@ -25,6 +27,13 @@ public class Autor {
         this.nombre = datosAutor.nombre();
         this.fechaNacimiento = Optional.of(datosAutor.fechaNacimiento()).orElse(0);
         this.fechaFallecimiento = datosAutor.fechaFallecimiento();
+    }
+
+    public void agregarLibro(Libro libro) {
+
+        if (!libros.contains(libro)) {
+            libros.add(libro);//Relacionar autor con libro
+        }
     }
 
     public Long getId() {
@@ -67,11 +76,11 @@ public class Autor {
     public String toString() {
         //si fechaNacimiento es = 0, mostrar "N/A", sino el valor correspondiente
         String fechaFallecimientoStr = (fechaFallecimiento == 0) ? "N/A" : String.valueOf(fechaFallecimiento);
-        return "--------Autor--------" +
-                "nombre='" + nombre + '\'' +
-                " Año Nacimiento=" + fechaNacimiento +
-                " Año Fallecimiento=" + fechaFallecimientoStr +
-                ", libros=" + libros +
+        return "--------Autor--------\n" +
+                " Nombre=" + nombre + "\n" +
+                " Año Nacimiento=" + fechaNacimiento + "\n" +
+                " Año Fallecimiento=" + fechaFallecimientoStr + "\n" +
+                " Libros= " + libros.stream().map(Libro::getTitulo).toList() + "\n" +
                 "---------------------";
     }
 }

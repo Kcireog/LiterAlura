@@ -16,13 +16,13 @@ public class Libro {
     @Column(unique = true)
     private String titulo;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "libro_autor", // Nombre de la tabla de unión
             joinColumns = @JoinColumn(name = "libro_id"), // Clave foránea hacia `libros`
             inverseJoinColumns = @JoinColumn(name = "autor_id") // Clave foránea hacia `autores`
     )
-    private List<Autor> autores;
+    private List<Autor> autores = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private Idioma idiomas;
@@ -36,14 +36,19 @@ public class Libro {
         this.titulo = datosLibro.titulo();
         this.idiomas = Idioma.fromString(datosLibro.idiomas().get(0));
         this.numDescargas = datosLibro.numDescargas();
+        this.autores = new ArrayList<>();
     }
 
     //validación autor, agregar solo el que no este agregado ya
     public void agregarAutor(Autor autor) {
-        if(!autores.contains(autor)) {
+        if (!autores.contains(autor)) {
             autores.add(autor);
         }
+        if (!autor.getLibros().contains(this)) {  // Evitar duplicados en la lista de libros del autor
+            autor.agregarLibro(this);
+        }
     }
+
     public Long getId() {
         return id;
     }
@@ -64,12 +69,12 @@ public class Libro {
         this.autores = autores;
     }
 
-    public List<String> getIdiomas() {
-        return idiomas;
+    public void setIdiomas(Idioma idiomas) {
+        this.idiomas = idiomas;
     }
 
-    public void setIdiomas(List<String> idiomas) {
-        this.idiomas = idiomas;
+    public Idioma getIdiomas() {
+        return idiomas;
     }
 
     public Double getNumDescargas() {
@@ -82,11 +87,11 @@ public class Libro {
 
     @Override
     public String toString() {
-        return "-----------Libro--------------" +
-                "titulo='" + titulo + '\'' +
-                ", autores=" + autores +
-                ", idiomas=" + idiomas +
-                ", numDescargas=" + numDescargas +
+        return "-----------Libro--------------\n" +
+                "titulo='" + titulo + "\n" +
+                "autores=" + autores.stream().map(Autor::getNombre).toList() + "\n" +
+                "idiomas=" + idiomas + "\n" +
+                "numDescargas=" + numDescargas + "\n" +
                 "------------------------------";
     }
 }
